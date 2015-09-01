@@ -4,24 +4,35 @@ from itertools import *
 from pprint import pprint
 import sys
 
-
-def lowercase_words():
-    for line in sys.stdin.readlines():
+def lowercase_words(fp):
+    for line in fp.readlines():
         yield line.rstrip('\n').lower()
+
+def words_from_file(filename):
+    with open(filename) as fp:
+        return list(lowercase_words(fp))
 
 def good_words():
     def only_a_to_z(word):
         for char in word:
-            if char not in "abcdefghijklmnopqrstuvwzyz":
+            if char not in 'abcdefghijklmnopqrstuvwzyz':
                 return False
         return True
 
-    def is_good_word(word):
-        return len(word) > 2 and \
-               len(word) < 8 and \
-               only_a_to_z(word)
+    profanity = words_from_file('profanity.list')
+    def profane(word):
+        return word in profanity
 
-    return (word for word in lowercase_words() if is_good_word(word))
+    def good_size(word):
+        return len(word) > 2 and len(word) < 8
+
+    def is_good_word(word):
+        return good_size(word) and \
+               only_a_to_z(word) and \
+               not profane(word)
+
+    return (word for word in lowercase_words(sys.stdin)
+            if is_good_word(word))
 
 def not_enough_words(num_words):
     sys.stderr.write("Not enough words! After filtering we " +
